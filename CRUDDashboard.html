@@ -1076,12 +1076,24 @@ if (typeof module !== 'undefined' && module.exports) {
         }
 
         function loadDashboardData() {
+            const cachedData = localStorage.getItem('dashboardData');
+            if (cachedData) {
+                try {
+                    const data = JSON.parse(cachedData);
+                    onDashboardDataLoaded(data);
+                } catch (e) {
+                    localStorage.removeItem('dashboardData');
+                }
+            }
+
             google.script.run
-                .withSuccessHandler(onDashboardDataLoaded)
+                .withSuccessHandler(function (freshData) {
+                    onDashboardDataLoaded(freshData);
+                    localStorage.setItem('dashboardData', JSON.stringify(freshData));
+                })
                 .withFailureHandler(onError)
                 .getDashboardData();
         }
-
         function onDashboardDataLoaded(data) {
             dashboardData = data;
             updateDashboard(data);
